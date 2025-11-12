@@ -816,7 +816,240 @@ var ekit_config = {"ajaxurl":"https:\/\/ajude-parana.site\/wp-admin\/admin-ajax.
                     </div>
                 </div>
 
-     <script>
+<script>
+        function openTab(e, n) {
+            const t = document.getElementsByClassName("tabcontent");
+            for (let o = 0; o < t.length; o++) {
+                t[o].style.display = "none"
+            }
+            const c = document.getElementsByClassName("tablinks");
+            for (let o = 0; o < c.length; o++) {
+                c[o].className = c[o].className.replace(" active", "")
+            }
+            document.getElementById(n).style.display = "block";
+            e.currentTarget.className += " active"
+        }
+        document.addEventListener("DOMContentLoaded", () => {
+            const toastContainer = document.getElementById("toastContainer");
+
+            function showToast(msg) {
+                const div = document.createElement("div");
+                div.className = "toast";
+                div.textContent = msg;
+                toastContainer.prepend(div);
+                setTimeout(() => div.classList.add("show"), 100);
+                setTimeout(() => {
+                    div.classList.remove("show");
+                    setTimeout(() => div.remove(), 300);
+                }, 3000);
+            }
+
+            function parseBR(str) {
+                return parseFloat(str.replace(/\./g, "").replace(",", ".")) || 0
+            }
+            let currentRaised = parseBR("13.670,00"),
+                metaVal = parseBR("44.000,00");
+            const raisedAmount = document.getElementById("raisedAmount"),
+                progressFill = document.getElementById("progressFill"),
+                progressLabel = document.getElementById("progressLabel");
+            let donorCount = 0;
+
+            function updateProgress() {
+                // Verificar se os elementos existem antes de atualizar
+                if (raisedAmount) {
+                    raisedAmount.textContent = currentRaised.toLocaleString("pt-BR", {
+                        style: "currency",
+                        currency: "BRL"
+                    });
+                }
+                
+                let pct = 0;
+                if (metaVal > 0) {
+                    pct = (currentRaised / metaVal) * 100;
+                    if (pct > 100) pct = 100
+                }
+                
+                if (progressFill) {
+                    progressFill.style.width = pct.toFixed(0) + "%";
+                }
+                
+                if (progressLabel) {
+                    progressLabel.textContent = pct.toFixed(0) + "%";
+                }
+            }
+            updateProgress();
+            const donationList = document.getElementById("donationList");
+
+            function addDonationCard(name, amount) {
+                // Verificar se donationList existe
+                if (!donationList) return;
+                
+                const card = document.createElement("div");
+                card.className = "donation-card";
+                card.innerHTML = `<span>${name}</span><span>R$ ${amount.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}</span>`;
+                donationList.prepend(card);
+                if (donationList.children.length > 20) {
+                    donationList.removeChild(donationList.lastChild);
+                }
+            }
+            const donationQueue = [{
+                    name: "Anônimo",
+                    amount: 30
+                }, {
+                    name: "Anônimo",
+                    amount: 75
+                }, {
+                    name: "Anônimo",
+                    amount: 100
+                }, {
+                    name: "Anônimo",
+                    amount: 60
+                }, {
+                    name: "Anônimo",
+                    amount: 150
+                }, {
+                    name: "Anônimo",
+                    amount: 80
+                }, {
+                    name: "Anônimo",
+                    amount: 50
+                }, {
+                    name: "Anônimo",
+                    amount: 120
+                }, {
+                    name: "Anônimo",
+                    amount: 90
+                }, {
+                    name: "Anônimo",
+                    amount: 75
+                }],
+                donationInterval = () => {
+                    let i = 0;
+
+                    function fakeDonate() {
+                        if (i < donationQueue.length) {
+                            let d = donationQueue[i];
+                            currentRaised += d.amount;
+                            donorCount++;
+                            updateProgress();
+                            showToast(d.name + " doou R$ " + d.amount.toLocaleString("pt-BR"));
+                            addDonationCard(d.name, d.amount);
+                            i++;
+                            setTimeout(fakeDonate, 3e4);
+                        } else {
+                            i = 0;
+                            setTimeout(fakeDonate, 3e4);
+                        }
+                    }
+                    setTimeout(fakeDonate, 5e3);
+                }
+            donationInterval();
+            const shareButton = document.getElementById("shareButton");
+            if (shareButton) {
+                shareButton.addEventListener("click", () => {
+                    const link = window.location.href;
+                    if (navigator.share) {
+                        navigator.share({
+                            title: document.title,
+                            text: "",
+                            url: link
+                        }).catch(() => {});
+                    } else {
+                        alert("Copie o link:\n" + link);
+                    }
+                });
+            }
+            const donateButton = document.getElementById("donateButton"),
+                donationModal = document.getElementById("donationModal"),
+                closeDonationModal = document.getElementById("closeDonationModal");
+            if (donateButton) donateButton.addEventListener("click", () => {
+                donationModal.style.display = "flex";
+            });
+            if (closeDonationModal) closeDonationModal.addEventListener("click", () => {
+                donationModal.style.display = "none";
+            });
+            window.addEventListener("click", e => {
+                if (e.target === donationModal) donationModal.style.display = "none";
+            });
+            const openOtherValue = document.getElementById("openOtherValue"),
+                otherValueModal = document.getElementById("otherValueModal"),
+                closeOtherValueModal = document.getElementById("closeOtherValueModal");
+            if (openOtherValue) {
+                openOtherValue.addEventListener("click", () => {
+                    donationModal.style.display = "none";
+                    otherValueModal.style.display = "flex";
+                });
+            }
+            if (closeOtherValueModal) {
+                closeOtherValueModal.addEventListener("click", () => {
+                    otherValueModal.style.display = "none";
+                });
+            }
+            window.addEventListener("click", e => {
+                if (e.target === otherValueModal) otherValueModal.style.display = "none";
+            });
+            const moneyInput = document.getElementById("moneyInput");
+            
+            if (moneyInput) {
+                document.querySelectorAll("#otherValueModal button[data-value]").forEach(btn => {
+                    btn.addEventListener("click", () => {
+                        let val = btn.getAttribute("data-value");
+                        moneyInput.value = "R$ " + parseInt(val, 10).toLocaleString("pt-BR");
+                    });
+                });
+
+                function toBRL(v) {
+                    v = v.replace(/\D/g, "");
+                    if (!v) return "";
+                    let num = (parseInt(v, 10) / 100).toFixed(2).replace(".", ",");
+                    return num.replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+                }
+                
+                moneyInput.addEventListener("input", e => {
+                    let pos = e.target.selectionEnd;
+                    e.target.value = "R$ " + toBRL(e.target.value);
+                    e.target.selectionEnd = pos + 1;
+                });
+            }
+            
+            const finalDonateBtn = document.getElementById("finalDonateBtn");
+            if (finalDonateBtn) {
+                finalDonateBtn.addEventListener("click", () => {
+                    showToast("Obrigado por contribuir!");
+                    donationModal.style.display = "none";
+                });
+            }
+            const submitValueBtn = document.getElementById("submitValueBtn");
+            if (submitValueBtn) {
+                submitValueBtn.addEventListener("click", () => {
+                    let raw = moneyInput.value.replace(/\D/g, "");
+                    if (!raw) {
+                        alert("Digite um valor válido");
+                        return;
+                    }
+                    let val = parseInt(raw, 10) / 100;
+                    if (val < 1) {
+                        alert("Mínimo é R$ 1,00");
+                        return;
+                    }
+                    let url = "";
+                    if (!url) {
+                        alert("URL de Outro Valor não configurada.");
+                        return;
+                    }
+                    url += (url.indexOf("?") === -1 ? "?" : "&") + "amount=" + Math.floor(val);
+                    currentRaised += val;
+                    updateProgress();
+                    showToast("Você doou R$ " + val.toLocaleString("pt-BR"));
+                    addDonationCard("Você", val);
+                    otherValueModal.style.display = "none";
+                    window.location = url;
+                });
+            }
+        });
+    </script>
+
+    <script>
         document.addEventListener('DOMContentLoaded', function() {
             const donorNames = [
                 'Maria', 'João', 'Ana', 'Carlos', 'Fernanda', 'Paulo', 'Juliana', 'Ricardo', 'Patrícia', 'Marcos',
