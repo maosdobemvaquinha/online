@@ -721,5 +721,54 @@ var ekit_config = {"ajaxurl":"https:\/\/ajude-parana.site\/wp-admin\/admin-ajax.
 </script>
 <script src="js/elementor.js" id="elementskit-elementor-js"></script>
 
+     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const donorNames = [
+                'Maria', 'João', 'Ana', 'Carlos', 'Fernanda', 'Paulo', 'Juliana', 'Ricardo', 'Patrícia', 'Marcos',
+                'Rafael', 'Camila', 'Bruno', 'Larissa', 'Gustavo', 'Bianca', 'Felipe', 'Carla', 'Diego', 'Vanessa',
+                'Roberta', 'Eduardo', 'André', 'Daniela', 'Luana', 'Thiago', 'Priscila', 'Leandro', 'Natália', 'Sérgio'
+            ];
+            const amounts = [30, 50, 75, 100, 150, 200, 250,];
+
+            function formatBRL(n) {
+                return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+
+            function showDonationNotification() {
+                const name = donorNames[Math.floor(Math.random() * donorNames.length)];
+                const amount = amounts[Math.floor(Math.random() * amounts.length)];
+
+                const el = document.createElement('div');
+                el.className = 'notificacao';
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(20px)';
+                el.innerHTML = `
+                    <div class="avatar">
+                        <img src="images/perfil.png" alt="${name}">
+                    </div>
+                    <div class="content">
+                        <h4>${name}</h4>
+                        <p>doou R$ ${formatBRL(amount)}</p>
+                    </div>
+                `;
+                document.body.appendChild(el);
+
+                requestAnimationFrame(() => {
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                });
+
+                setTimeout(() => {
+                    el.style.opacity = '0';
+                    el.style.transform = 'translateY(20px)';
+                    setTimeout(() => el.remove(), 300);
+                }, 2800);
+            }
+
+            // Primeira notificação e intervalo de 4s
+            showDonationNotification();
+            setInterval(showDonationNotification, 7000);
+        });
+    </script>
  
 </body></html>
